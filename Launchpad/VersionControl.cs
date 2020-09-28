@@ -16,8 +16,43 @@ namespace Launchpad
     {
         private static UpdateMeta Meta = new UpdateMeta();
         private static GenericLoadingForm LoadingForm = new GenericLoadingForm();
-        private static string LocalVersionFile = string.Join("", Directory.GetFiles(AppConfig.Path, "version.txt"));
-        private static int LocalVersion = Int16.Parse(File.ReadAllText(LocalVersionFile));
+
+        private static string LocalVersionFile
+        {
+            get
+            {
+                string FileLocation = AppConfig.Path + "version.txt";
+                GetMetaInfo();
+
+                if (File.Exists(FileLocation) == false)
+                {
+                    File.Create(FileLocation);
+                }
+
+                return FileLocation;
+            }    
+        }
+
+        private static int LocalVersion
+        {
+            get
+            {
+                int VersionData;
+
+                try
+                {
+                    VersionData = Int16.Parse(File.ReadAllText(LocalVersionFile));
+                }
+                catch
+                {
+                    GetMetaInfo();
+                    File.WriteAllText(LocalVersionFile, Meta.Versions[0].ID.ToString());
+                    VersionData = Meta.Versions[0].ID;
+                }
+
+                return VersionData;
+            }
+        }
 
 
         // This gets the meta data from the specifide server in the config and converts the received json to standard varibles
@@ -45,10 +80,16 @@ namespace Launchpad
 
             GetMetaInfo();
 
+            if (File.Exists(LocalVersionFile) == false)
+            {
+                File.Create(LocalVersionFile);
+                File.WriteAllText(LocalVersionFile, Meta.Versions[0].ID.ToString());
+            }
+
             if (Meta.Versions[0].ID > LocalVersion)
             {
                 DialogResult Result;
-                Result = MessageBox.Show("A new update has been released. Would you like to update?", "New Update", MessageBoxButtons.YesNo); 
+                Result = MessageBox.Show("A new update has been released. Would you like to update?", "New Update", MessageBoxButtons.YesNo);
                 if (Result == DialogResult.Yes)
                 {
                     ChangeVersion(0);
@@ -56,7 +97,7 @@ namespace Launchpad
             }
             else
             {
-                if(IsBackground == false)
+                if (IsBackground == false)
                 {
                     MessageBox.Show("Game is up to date.", "No update", MessageBoxButtons.OK);
                 }
@@ -80,7 +121,9 @@ namespace Launchpad
                     Entery.Extract(AppConfig.Path, ExtractExistingFileAction.OverwriteSilently);
                 }
 
-                File.WriteAllText(Path.Combine(AppConfig.Path, "version.txt"), Meta.Versions[Version].ID.ToString());
+
+                File.WriteAllText(LocalVersionFile, Meta.Versions[Version].ID.ToString());
+
 
                 LoadingForm.Hide();
                 MessageBox.Show("Update Succsessful", "Succsessful");

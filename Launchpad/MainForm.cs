@@ -63,7 +63,6 @@ namespace Launchpad
 
         private void ButtonUpdate_Click(object sender, EventArgs e)
         {
-            //VersionControl.CheckForUpdate();
             VersionControl.CheckForUpdate();
         }
     }
